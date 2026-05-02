@@ -1,0 +1,133 @@
+@model CalendarViewModel
+@{
+    ViewData["Title"] = "Calendar";
+    var now = DateTime.Now;
+    var firstDay = new DateTime(now.Year, now.Month, 1);
+    var lastDay = firstDay.AddMonths(1).AddDays(-1);
+    var startDow = (int)firstDay.DayOfWeek;
+    var tasksByDate = Model.Tasks
+        .Where(t => t.DueDate.HasValue)
+        .GroupBy(t => t.DueDate!.Value.Date)
+        .ToDictionary(g => g.Key, g => g.ToList());
+}
+
+<div class="main-container">
+    <div class="page-header fade-in">
+        <div>
+            <h1 class="page-title">Calendar</h1>
+            <p class="page-subtitle">@now.ToString("MMMM yyyy")</p>
+        </div>
+        <a asp-controller="Todo" asp-action="Index" class="btn btn-glass" style="width:auto;">← Lists</a>
+    </div>
+
+    <div class="glass fade-in" style="padding:28px;margin-bottom:28px;">
+        <!-- Days of week header -->
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:8px;">
+            @foreach (var day in new[] { "Sun","Mon","Tue","Wed","Thu","Fri","Sat" })
+            {
+                <div style="text-align:center;font-size:12px;font-weight:600;color:var(--text-muted);padding:8px 0;">@day</div>
+            }
+        </div>
+
+        <!-- Calendar grid -->
+        <div class="calendar-grid">
+            @for (int i = 0; i < startDow; i++)
+            {
+                <div class="cal-day" style="opacity:0;pointer-events:none;"></div>
+            }
+
+            @for (int d = 1; d <= lastDay.Day; d++)
+            {
+                var date = new DateTime(now.Year, now.Month, d);
+                var isToday = date.Date == now.Date;
+                var hasTasks = tasksByDate.ContainsKey(date.Date);
+                var dayTasks = hasTasks ? tasksByDate[date.Date] : new List<TodoTask>();
+
+                <div class="cal-day @(isToday ? "today" : "") @(hasTasks ? "has-tasks" : "")"
+                     onclick="showDayTasks(@d)"
+                     title="@(hasTasks ? dayTasks.Count + " task(s)" : "No tasks")">
+                    <span>@d</span>
+                    @if (dayTasks.Count > 0)
+                    {
+                        <div style="font-size:10px;color:var(--accent3);margin-top:2px;">@dayTasks.Count</div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Tasks panel -->
+    <div id="dayTasksPanel" class="glass fade-in" style="padding:28px;display:none;">
+        <h3 id="dayTitle" style="font-size:18px;font-weight:600;margin-bottom:20px;"></h3>
+        <div id="dayTasksList" class="task-list"></div>
+    </div>
+
+    <!-- Upcoming tasks -->
+    <div class="glass fade-in" style="padding:28px;">
+        <h3 style="font-size:18px;font-weight:600;margin-bottom:20px;">Upcoming Tasks</h3>
+        @{
+            var upcoming = Model.Tasks
+                .Where(t => t.DueDate.HasValue && t.DueDate.Value >= DateTime.UtcNow && !t.IsCompleted)
+                .OrderBy(t => t.DueDate)
+                .Take(10)
+                .ToList();
+        }
+        @if (!upcoming.Any())
+        {
+            <p style="color:var(--text-secondary);font-size:14px;">No upcoming tasks 🎉</p>
+        }
+        else
+        {
+            <div class="task-list stagger">
+                @foreach (var task in upcoming)
+                {
+                    <div class="task-item">
+                        <div style="flex:1;">
+                            <div class="task-title">@task.Title</div>
+                            <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">@task.TodoList.Title</div>
+                        </div>
+                        <span class="task-due">📅 @task.DueDate!.Value.ToString("MMM d, yyyy")</span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const taskData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+    tasksByDate.ToDictionary(
+        kv => kv.Key.Day.ToString(),
+        kv => kv.Value.Select(t => new { t.Title, Due = t.DueDate?.ToString("HH:mm"), ListTitle = t.TodoList.Title, t.IsCompleted })
+    )
+));
+
+function showDayTasks(day) {
+    const panel = document.getElementById('dayTasksPanel');
+    const title = document.getElementById('dayTitle');
+    const list = document.getElementById('dayTasksList');
+
+    title.textContent = `Tasks for @(now.ToString("MMMM")) ${day}`;
+    const tasks = taskData[day.toString()] || [];
+
+    if (!tasks.length) {
+        list.innerHTML = '<p style="color:var(--text-secondary);font-size:14px;">No tasks for this day</p>';
+    } else {
+        list.innerHTML = tasks.map(t => `
+            <div class="task-item ${t.IsCompleted ? 'completed' : ''}">
+                <div class="task-checkbox ${t.IsCompleted ? 'checked' : ''}">${t.IsCompleted ? '✓' : ''}</div>
+                <div style="flex:1;">
+                    <div class="task-title">${t.Title}</div>
+                    <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">${t.ListTitle}</div>
+                </div>
+                ${t.Due ? `<span class="task-due">🕐 ${t.Due}</span>` : ''}
+            </div>
+        `).join('');
+    }
+
+    panel.style.display = 'block';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+</script>
+}

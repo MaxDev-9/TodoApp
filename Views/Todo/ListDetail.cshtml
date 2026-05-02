@@ -1,0 +1,102 @@
+@model TodoList
+@{
+    ViewData["Title"] = Model.Title;
+    var total = Model.Tasks.Count;
+    var done = Model.Tasks.Count(t => t.IsCompleted);
+    var pct = total > 0 ? (done * 100 / total) : 0;
+}
+
+<div class="main-container">
+    <a asp-action="Index" class="back-link">← Back to Lists</a>
+
+    <div class="page-header fade-in">
+        <div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+                <div style="width:12px;height:12px;border-radius:50%;background:@Model.Color;"></div>
+                <h1 class="page-title" style="margin:0;">@Model.Title</h1>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <p class="page-subtitle">@Model.Description</p>
+            }
+            @if (Model.DueDate.HasValue)
+            {
+                <p style="font-size:13px;color:var(--text-muted);margin-top:6px;">📅 Due @Model.DueDate.Value.ToString("MMMM d, yyyy")</p>
+            }
+        </div>
+        <a asp-action="CreateTask" asp-route-listId="@Model.Id" class="btn btn-primary" style="width:auto;">+ Add Task</a>
+    </div>
+
+    <div class="glass fade-in" style="padding:20px 24px;margin-bottom:24px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <span style="font-size:14px;color:var(--text-secondary);">Progress</span>
+            <span style="font-size:14px;font-weight:600;">@done / @total tasks</span>
+        </div>
+        <div class="progress-bar" style="height:8px;">
+            <div class="progress-fill" style="width:@pct%;background:@Model.Color;"></div>
+        </div>
+    </div>
+
+    @if (!Model.Tasks.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-icon">✅</div>
+            <h2 class="empty-title">No tasks yet</h2>
+            <p class="empty-text">Add your first task to this list</p>
+            <a asp-action="CreateTask" asp-route-listId="@Model.Id" class="btn btn-primary" style="width:auto;">Add Task</a>
+        </div>
+    }
+    else
+    {
+        <div class="task-list stagger">
+            @foreach (var task in Model.Tasks.OrderBy(t => t.IsCompleted).ThenBy(t => t.Priority == TaskPriority.Urgent ? 0 : t.Priority == TaskPriority.High ? 1 : t.Priority == TaskPriority.Medium ? 2 : 3))
+            {
+                var isOverdue = task.DueDate.HasValue && task.DueDate.Value < DateTime.UtcNow && !task.IsCompleted;
+                <div class="task-item @(task.IsCompleted ? "completed" : "")">
+                    <form asp-action="ToggleTask" method="post" style="margin:0;">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@task.Id" />
+                        <button type="submit" class="task-checkbox @(task.IsCompleted ? "checked" : "")" title="Toggle complete">
+                            @if (task.IsCompleted) { <span>✓</span> }
+                        </button>
+                    </form>
+
+                    <div style="flex:1;min-width:0;">
+                        <div class="task-title">@task.Title</div>
+                        @if (!string.IsNullOrEmpty(task.Description))
+                        {
+                            <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">@task.Description</div>
+                        }
+                    </div>
+
+                    @{
+                        var priorityClass = task.Priority switch {
+                            TaskPriority.Low => "priority-low",
+                            TaskPriority.High => "priority-high",
+                            TaskPriority.Urgent => "priority-urgent",
+                            _ => "priority-medium"
+                        };
+                        var priorityLabel = task.Priority.ToString();
+                    }
+                    <span class="priority-badge @priorityClass">@priorityLabel</span>
+
+                    @if (task.DueDate.HasValue)
+                    {
+                        <span class="task-due @(isOverdue ? "overdue" : "")">
+                            📅 @task.DueDate.Value.ToString("MMM d")
+                        </span>
+                    }
+
+                    <div style="display:flex;gap:6px;">
+                        <a asp-action="EditTask" asp-route-id="@task.Id" class="btn btn-glass btn-icon" title="Edit">✏️</a>
+                        <form asp-action="DeleteTask" method="post" style="margin:0;" onsubmit="return confirm('Delete this task?')">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@task.Id" />
+                            <button type="submit" class="btn btn-danger btn-icon" title="Delete">🗑</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

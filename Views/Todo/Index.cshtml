@@ -1,0 +1,63 @@
+@model List<TodoList>
+@{
+    ViewData["Title"] = "My Lists";
+}
+
+<div class="main-container">
+    <div class="page-header fade-in">
+        <div>
+            <h1 class="page-title">My Lists</h1>
+            <p class="page-subtitle">@Model.Count list@(Model.Count != 1 ? "s" : "") · @Model.Sum(l => l.Tasks.Count) task@(Model.Sum(l => l.Tasks.Count) != 1 ? "s" : "") total</p>
+        </div>
+        <a asp-action="CreateList" class="btn btn-primary" style="width:auto;">+ New List</a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state glass fade-in" style="padding:80px 32px;">
+            <div class="empty-icon">📋</div>
+            <h2 class="empty-title">No lists yet</h2>
+            <p class="empty-text">Create your first todo list to get started</p>
+            <a asp-action="CreateList" class="btn btn-primary" style="width:auto;">Create your first list</a>
+        </div>
+    }
+    else
+    {
+        <div class="lists-grid stagger">
+            @foreach (var list in Model)
+            {
+                var total = list.Tasks.Count;
+                var done = list.Tasks.Count(t => t.IsCompleted);
+                var pct = total > 0 ? (done * 100 / total) : 0;
+
+                <div class="list-card" style="--card-color:@list.Color;">
+                    <a asp-action="ListDetail" asp-route-id="@list.Id" style="text-decoration:none;color:inherit;display:block;">
+                        <h3 class="list-card-title">@list.Title</h3>
+                        @if (!string.IsNullOrEmpty(list.Description))
+                        {
+                            <p class="list-card-desc">@list.Description</p>
+                        }
+                        @if (list.DueDate.HasValue)
+                        {
+                            <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">📅 Due @list.DueDate.Value.ToString("MMM d, yyyy")</p>
+                        }
+                    </a>
+                    <div class="list-card-footer">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width:@pct%"></div>
+                        </div>
+                        <span class="task-count">@done/@total</span>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:16px;">
+                        <a asp-action="EditList" asp-route-id="@list.Id" class="btn btn-glass btn-sm">Edit</a>
+                        <form asp-action="DeleteList" method="post" style="margin:0;" onsubmit="return confirm('Delete this list and all its tasks?')">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@list.Id" />
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

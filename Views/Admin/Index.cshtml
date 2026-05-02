@@ -1,0 +1,103 @@
+@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="main-container">
+    <div class="page-header fade-in">
+        <div>
+            <h1 class="page-title">Admin Dashboard</h1>
+            <p class="page-subtitle">Manage users and monitor the platform</p>
+        </div>
+        <a asp-action="AllLists" class="btn btn-glass" style="width:auto;">View All Lists</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid stagger">
+        <div class="stat-card">
+            <div class="stat-value" style="-webkit-text-fill-color:#A78BFA;">@Model.TotalUsers</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" style="-webkit-text-fill-color:#67E8F9;">@Model.TotalLists</div>
+            <div class="stat-label">Total Lists</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" style="-webkit-text-fill-color:#FFB74D;">@Model.TotalTasks</div>
+            <div class="stat-label">Total Tasks</div>
+        </div>
+        <div class="stat-card">
+            @{
+                var completionRate = Model.TotalTasks > 0 ? (Model.CompletedTasks * 100 / Model.TotalTasks) : 0;
+            }
+            <div class="stat-value" style="-webkit-text-fill-color:#4ECB8D;">@completionRate%</div>
+            <div class="stat-label">Completion Rate</div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="glass fade-in" style="padding:28px;">
+        <h2 style="font-size:20px;font-weight:600;margin-bottom:24px;">Users</h2>
+        <div style="overflow-x:auto;">
+            <table class="glass-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Roles</th>
+                        <th>Lists</th>
+                        <th>Tasks</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model.Users)
+                    {
+                        <tr>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:10px;">
+                                    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6C63FF,#43CBFF);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;">
+                                        @user.FullName.Substring(0,1).ToUpper()
+                                    </div>
+                                    <span style="font-weight:500;">@user.FullName</span>
+                                </div>
+                            </td>
+                            <td style="color:var(--text-secondary);">@user.Email</td>
+                            <td>
+                                @foreach (var role in user.Roles)
+                                {
+                                    <span class="badge @(role == "Admin" ? "badge-admin" : "badge-user")">@role</span>
+                                }
+                            </td>
+                            <td>@user.ListCount</td>
+                            <td>@user.TaskCount</td>
+                            <td style="color:var(--text-secondary);font-size:13px;">@user.CreatedAt.ToString("MMM d, yyyy")</td>
+                            <td>
+                                <div style="display:flex;gap:8px;align-items:center;">
+                                    <a asp-action="UserDetail" asp-route-id="@user.Id" class="btn btn-glass btn-sm">View</a>
+                                    <form asp-action="ToggleRole" method="post" style="margin:0;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <input type="hidden" name="role" value="@(user.Roles.Contains("Admin") ? "Admin" : "Admin")" />
+                                        <button type="submit" class="btn btn-sm @(user.Roles.Contains("Admin") ? "btn-danger" : "btn-success")">
+                                            @(user.Roles.Contains("Admin") ? "Revoke Admin" : "Make Admin")
+                                        </button>
+                                    </form>
+                                    @if (user.Email != User.Identity?.Name)
+                                    {
+                                        <form asp-action="DeleteUser" method="post" style="margin:0;" onsubmit="return confirm('Delete this user and all their data?')">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@user.Id" />
+                                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

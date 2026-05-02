@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] – TaskFlow</title>
+    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
+</head>
+<body>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <nav class="navbar">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                <div class="logo-icon">✦</div>
+                TaskFlow
+            </a>
+            <ul class="nav-links">
+                @if (User.IsInRole("Admin"))
+                {
+                    <li><a asp-controller="Admin" asp-action="Index">Dashboard</a></li>
+                    <li><a asp-controller="Admin" asp-action="AllLists">All Lists</a></li>
+                }
+                else
+                {
+                    <li><a asp-controller="Todo" asp-action="Index">My Lists</a></li>
+                    <li><a asp-controller="Todo" asp-action="Calendar">Calendar</a></li>
+                }
+            </ul>
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div class="nav-avatar">@User.Identity.Name?.Substring(0,1).ToUpper()</div>
+                <form asp-controller="Account" asp-action="Logout" method="post" style="margin:0;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-glass btn-sm">Sign Out</button>
+                </form>
+            </div>
+        </nav>
+    }
+
+    <main>
+        @RenderBody()
+    </main>
+
+    <script src="~/js/app.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

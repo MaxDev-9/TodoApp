@@ -1,0 +1,57 @@
+@model List<TodoList>
+@{
+    ViewData["Title"] = "All Lists";
+}
+
+<div class="main-container">
+    <div class="page-header fade-in">
+        <div>
+            <h1 class="page-title">All Lists</h1>
+            <p class="page-subtitle">@Model.Count lists across all users</p>
+        </div>
+        <a asp-action="Index" class="btn btn-glass" style="width:auto;">← Dashboard</a>
+    </div>
+
+    <div class="glass fade-in" style="padding:28px;">
+        <div style="overflow-x:auto;">
+            <table class="glass-table">
+                <thead>
+                    <tr>
+                        <th>List</th>
+                        <th>Owner</th>
+                        <th>Tasks</th>
+                        <th>Due</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var list in Model.OrderByDescending(l => l.CreatedAt))
+                    {
+                        <tr>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:10px;">
+                                    <div style="width:10px;height:10px;border-radius:50%;background:@list.Color;flex-shrink:0;"></div>
+                                    <span style="font-weight:500;">@list.Title</span>
+                                </div>
+                            </td>
+                            <td style="color:var(--text-secondary);">@list.User.FullName</td>
+                            <td>@list.Tasks.Count (@list.Tasks.Count(t => t.IsCompleted) done)</td>
+                            <td style="color:var(--text-muted);font-size:13px;">
+                                @(list.DueDate.HasValue ? list.DueDate.Value.ToString("MMM d, yyyy") : "—")
+                            </td>
+                            <td style="color:var(--text-secondary);font-size:13px;">@list.CreatedAt.ToString("MMM d, yyyy")</td>
+                            <td>
+                                <form asp-action="DeleteList" method="post" style="margin:0;" onsubmit="return confirm('Delete this list?')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@list.Id" />
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
