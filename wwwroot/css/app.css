@@ -73,7 +73,7 @@ body::after {
   background: rgba(10,10,26,0.5);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(67, 203, 255, 0.12);
   border-radius: var(--radius);
   box-shadow: 0 8px 40px rgba(0,0,0,0.4);
 }
@@ -177,7 +177,7 @@ body::after {
   width: 100%;
   max-width: 440px;
   padding: 48px 40px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(67, 203, 255, 0.1);
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
   border: 1px solid rgba(255,255,255,0.2);
@@ -226,7 +226,7 @@ body::after {
 .form-control {
   width: 100%;
   padding: 14px 18px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(67, 203, 255, 0.1);
   border: 1px solid rgba(255,255,255,0.15);
   border-radius: var(--radius-sm);
   color: white;
@@ -332,9 +332,9 @@ select.form-control option {
 }
 
 .list-card {
-  background: rgba(255,255,255,0.07);
+  background: rgba(108, 99, 255, 0.08);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(108, 99, 255, 0.22);
   border-radius: var(--radius);
   padding: 24px;
   text-decoration: none;
@@ -356,9 +356,9 @@ select.form-control option {
 
 .list-card:hover {
   transform: translateY(-4px);
-  background: rgba(255,255,255,0.1);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.3);
-  border-color: rgba(255,255,255,0.2);
+  background: rgba(108, 99, 255, 0.15);
+  box-shadow: 0 16px 48px rgba(108, 99, 255, 0.2);
+  border-color: rgba(108, 99, 255, 0.4);
 }
 
 .list-card-title {
@@ -410,15 +410,15 @@ select.form-control option {
   align-items: center;
   gap: 14px;
   padding: 16px 20px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(67, 203, 255, 0.05);
+  border: 1px solid rgba(67, 203, 255, 0.12);
   border-radius: var(--radius-sm);
   transition: var(--transition);
 }
 
 .task-item:hover {
-  background: rgba(255,255,255,0.08);
-  border-color: rgba(255,255,255,0.15);
+  background: rgba(67, 203, 255, 0.1);
+  border-color: rgba(67, 203, 255, 0.25);
 }
 
 .task-item.completed { opacity: 0.5; }
@@ -514,7 +514,7 @@ select.form-control option {
 .cal-day {
   aspect-ratio: 1;
   padding: 8px;
-  background: rgba(255,255,255,0.05);
+  background: rgba(67, 203, 255, 0.05);
   border: 1px solid rgba(255,255,255,0.07);
   border-radius: 10px;
   font-size: 12px;
